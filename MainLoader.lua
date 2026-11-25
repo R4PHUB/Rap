@@ -2,7 +2,7 @@ local VERSION = "1.1"
 local HUB_NAME = "RapHub"
 local REPO = "R4PHUB/all-game"
 local games = {
-	[10765288803] = "break-steal-egg.lua",
+	[10765288803] = "bsea.lua",
 }
 
 local HttpService = game:GetService("HttpService")
