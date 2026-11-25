@@ -1,22 +1,42 @@
-local VERSION = "1.0"
+local VERSION = "1.1"
 local HUB_NAME = "RapHub"
+local REPO = "R4PHUB/all-game"
 local games = {
-	[10765288803] = "https://raw.githubusercontent.com/R4PHUB/all-game/refs/heads/main/break-steal-egg.lua",
+	[10765288803] = "break-steal-egg.lua",
 }
+
+local HttpService = game:GetService("HttpService")
 
 local universeId = game.GameId
 local placeId = game.PlaceId
-local scriptURL = games[universeId] or games[placeId]
+local scriptFile = games[universeId] or games[placeId]
 
 print(string.format("[%s v%s] PlaceId: %d | UniverseId: %d", HUB_NAME, VERSION, placeId, universeId))
 
-if scriptURL then
+-- Ambil commit terbaru, lalu muat file dari commit itu (raw per-commit tidak pernah basi oleh cache).
+-- Kalau API GitHub gagal (mis. limit), pakai URL branch biasa + penanda waktu.
+local function ResolveUrl(File)
+	local ok, Body = pcall(function()
+		return game:HttpGet("https://api.github.com/repos/" .. REPO .. "/commits/main")
+	end)
+	if ok and type(Body) == "string" then
+		local ok2, Data = pcall(function()
+			return HttpService:JSONDecode(Body)
+		end)
+		local Sha = ok2 and type(Data) == "table" and Data.sha
+		if type(Sha) == "string" and #Sha >= 7 then
+			return "https://raw.githubusercontent.com/" .. REPO .. "/" .. Sha .. "/" .. File
+		end
+	end
+	return "https://raw.githubusercontent.com/" .. REPO .. "/refs/heads/main/" .. File .. "?t=" .. tostring(os.time())
+end
+
+if scriptFile then
 	print(string.format("[%s] Game supported! UniverseId: %d", HUB_NAME, universeId))
 	print(string.format("[%s] Loading script...", HUB_NAME))
 
-	-- Penanda waktu di URL supaya GitHub tidak memberi versi cache yang lama
 	local ok, err = pcall(function()
-		loadstring(game:HttpGet(scriptURL .. "?t=" .. tostring(os.time())))()
+		loadstring(game:HttpGet(ResolveUrl(scriptFile)))()
 	end)
 
 	if not ok then
