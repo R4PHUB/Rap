@@ -14,8 +14,9 @@ if scriptURL then
 	print(string.format("[%s] Game supported! UniverseId: %d", HUB_NAME, universeId))
 	print(string.format("[%s] Loading script...", HUB_NAME))
 
+	-- Penanda waktu di URL supaya GitHub tidak memberi versi cache yang lama
 	local ok, err = pcall(function()
-		loadstring(game:HttpGet(scriptURL))()
+		loadstring(game:HttpGet(scriptURL .. "?t=" .. tostring(os.time())))()
 	end)
 
 	if not ok then
